@@ -94,6 +94,9 @@ export class AlmanacComponent implements OnInit {
     @Input()
     month: number = 6;
 
+    @Output()
+    cldClick:EventEmitter<any> = new EventEmitter<any>();
+
     constructor(private _almanacService: AlmanacService) {
     }
 
@@ -147,6 +150,7 @@ export class AlmanacComponent implements OnInit {
 
     onDayClick(event:Day){
         this._chooseDay = event;
+        this.cldClick.emit(event);
     }
 }
 

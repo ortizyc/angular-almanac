@@ -345,7 +345,7 @@ export class Almanac {
     }
      /**
      * 日历属性
-     * 
+     *
      * @param  int sYear  公元年4位数字
      * @param  int sMonth 公元月数字
      * @param  int sDay   公元日数字
@@ -634,4 +634,4 @@ export class Almanac {
 
 var almanac = new Almanac();
 
-console.log(JSON.stringify(almanac.calendar(2015,6)));
+console.log(JSON.stringify(almanac.calendar(2017,0)));

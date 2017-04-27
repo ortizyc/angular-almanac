@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, Pipe, PipeTransform } from '@angular/core';
 
 import { AlmanacService } from "./almanac.service";
 
@@ -46,6 +46,7 @@ export class Day {
             display:flex;
             flex-direction:column;
             flex-wrap:nowrap;
+            min-width:600px;
         }
         .header {
             display:flex;
@@ -62,9 +63,13 @@ export class Day {
             width:8rem;
         }
         .content {
+            display:flex;
         }
         .body {
+            flex:3;
             flex-direction:column;
+        }
+        .day-detail{
         }
         .footer {
             display:flex;
@@ -72,7 +77,7 @@ export class Day {
             justify-content:center;
             min-height:2rem;
         }
-    `]
+    `],
 })
 export class AlmanacComponent implements OnInit {
 
@@ -104,7 +109,7 @@ export class AlmanacComponent implements OnInit {
         this._curMonth = this._almanacService.getCalendar(this.year, this.month);
         this._chooseDay = this._curMonth['0'];
         let curMonthLength = this._curMonth['length'];
-        for(let idx=0;idx<this._curMonth['firstWeek']-1;idx++){
+        for(let idx=0;idx<this._curMonth['firstWeek'];idx++){
             this._week.push(this._blockDay);
         }
         for (let idx=0;idx<curMonthLength;idx++) {
@@ -113,7 +118,7 @@ export class AlmanacComponent implements OnInit {
                 curDay.color="red";
             }
             this._week.push(curDay);
-            if (curDay.week === "日") {
+            if (curDay.week === "六") {
                 this._month.push(this._week);
                 this._week = [];
             }
@@ -165,7 +170,7 @@ export class AlmanacComponent implements OnInit {
         <div class="row" *ngIf="_week">
             <div class="col" *ngFor="let day of _week" (click)="onColClick(day)" [style.color]="day.color">
                 <div class="sday">{{day.sDay}}</div>
-                <div class="lday" *ngIf="day.sDay">{{_almanacService.formatLunarDay(day.lDay)}}</div>
+                <div class="lday" *ngIf="day.sDay">{{showLunar(day)|customslice}}</div>
             </div>
         </div>
         `,
@@ -199,7 +204,7 @@ export class AlmanacComponent implements OnInit {
 export class AlmanacRowComponent implements OnInit {
 
     private _week: Array<Day>;
-    private _titles: Array<string> = ["星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"];
+    private _titles: Array<string> = ["星期日","星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
 
     @Output()
     weekInit: EventEmitter<any> = new EventEmitter();
@@ -210,6 +215,7 @@ export class AlmanacRowComponent implements OnInit {
     @Input('week')
     set week(w: Array<Day>) {
         this._week = w;
+        this.weekInit.emit(w);
     }
 
     get week() {
@@ -222,5 +228,70 @@ export class AlmanacRowComponent implements OnInit {
 
     onColClick(event:Day) {
         this.dayClick.emit(event);
+    }
+
+    showLunar(day:Day){
+        let retDay:string="";
+        if(day.solarTerms){
+            return day.solarTerms;
+        }
+        if(day.lunarFestival || day.solarFestival){
+            return `${day.lunarFestival||''} ${day.solarFestival||''}`
+        }
+        if(day.lDay===1){
+            if(day.isLeap){
+                retDay = "闰";
+            }
+            retDay += this._almanacService.formatLunarMonth(day.lMonth);
+        }else{
+            retDay=this._almanacService.formatLunarDay(day.lDay);
+        }
+        return retDay;
+    }
+}
+
+@Component({
+    selector: 'day-detail-ng2',
+    template:`
+        <div class="day-detail">
+            <div class="hd">asdf</div>
+            <div class="bd">asdf</div>
+            <div class="ft">asdf</div>
+        </div>
+    `,
+    styles: [`
+        .day-detail{
+            display:flex;
+            flex-direction:column;
+        }
+    `]
+})
+export class AlmanacDayComponent implements OnInit {
+    private _day:Day;
+
+    public dayInit:EventEmitter<Day> = new EventEmitter<Day>();
+
+    @Input('day')
+    set day(d:Day){
+        this._day = d;
+        this.dayInit.emit(d);
+    }
+
+    get day(){
+        return this._day;
+    }
+
+    constructor(private _almanacService:AlmanacComponent) { }
+
+    ngOnInit() { }
+}
+
+
+
+@Pipe({name: 'customslice'})
+export class CustomSlicePipe implements PipeTransform {
+    transform(value: string): any {
+        if(value.length<8) return value;
+        return value.slice(0,7)+'...';
     }
 }
